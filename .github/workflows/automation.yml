@@ -8,7 +8,7 @@ on:
 defaults:
   run:
     shell: bash
-    working_dir: 'repo'
+    working-directory: 'repo'
 
 jobs:
   scrape:
