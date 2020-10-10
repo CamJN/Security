@@ -8,7 +8,6 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: 'repo'
 
 jobs:
   scrape:
@@ -22,39 +21,31 @@ jobs:
           path: 'repo'
           clean: true
       - name: prep env
-        run: sudo apt-get install -y libxml2-utils && mkdir ../data && pwd && ls -a ../
+        run: |
+          sudo apt-get install -y libxml2-utils
+          mkdir -p data
+          cd repo
+          git config user.name github-actions
+          git config user.email github-actions@github.com
       - name: Scrape data
-        run: 'curl -sSL https://opensource.apple.com/source/Security/ | xmllint --html --xpath ''.//a[starts-with(@href,"Security")]/@href'' - | tr " " "\n" | sed -Ee ''s@href="Security-([^"]+)/"@\1@g'' | sort -u | grep -vf <(git tag | sed -Ee ''s/v(.*)/^\1$/g'' ) | xargs -I{} curl -o ../data/Security-{}.tgz "https://opensource.apple.com/tarballs/Security/Security-{}.tar.gz"'
-      - name: save data
-        uses: actions/upload-artifact@v2
-        with:
-          name: tarballs
-          path: data
-
-  # commit:
-  #   name: Commit changes
-  #   continue-on-error: true
-  #   runs-on: ubuntu-latest
-  #   needs: [scrape]
-  #   steps:
-  #     - name: Get scraped data
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: tarballs
-
-
-
-
-  #     - name: Checkout data
-  #       uses: actions/checkout@v2
-  #       run: |
-  #         git config user.name github-actions
-  #         git config user.email github-actions@github.com
-  #         for f in $FILES; do
-  #         git add .
-  #         git commit -m "Version ${ver}"
-  #         git tag v${ver}
-  #         git push origin
-  #         git push origin --tags
-  #         done
+        run: 'curl -sSL https://opensource.apple.com/source/Security/ | xmllint --html --xpath ''.//a[starts-with(@href,"Security")]/@href'' - | tr " " "\n" | sed -Ee ''s@href="Security-([^"]+)/"@\1@g'' | sort -u | grep -vf <(git -C repo tag | sed -Ee ''s/v(.*)/^\1$/g'' ) | xargs -I{} curl -o ./data/Security-{}.tgz "https://opensource.apple.com/tarballs/Security/Security-{}.tar.gz"'
+      - name: loop and upload
+        run: |
+          for f in $(ls data/Security-* | sort -V); do
+          mv $f ./
+          gunzip Security-*.tgz
+          tar -xf Security-*.tar
+          rm Security-*.tar
+          ver=$(ls -d Security-* | sed -Ee 's/Security-(.*)/\1/g' )
+          pushd Security-${ver}
+          mv ../repo/.git .
+          rm -rf ../repo
+          git add .
+          git commit -m "Version ${ver}"
+          git tag v${ver}
+          git push origin
+          git push origin --tags
+          popd
+          mv Security-${ver} repo
+          done
 
