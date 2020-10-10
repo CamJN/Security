@@ -22,8 +22,7 @@ jobs:
           path: 'repo'
           clean: true
       - name: prep env
-        run: sudo apt-get install -y libxml2-utils
-        run: mkdir ../data
+        run: sudo apt-get install -y libxml2-utils && mkdir ../data
       - name: Scrape data
         run: 'curl -sSL https://opensource.apple.com/source/Security/ | xmllint --html --xpath ''.//a[starts-with(@href,"Security")]/@href'' - | tr " " "\n" | sed -Ee ''s@href="Security-([^"]+)/"@\1@g'' | sort -u | grep -vf <(git tag | sed -Ee ''s/v(.*)/^\1$/g'' ) | xargs -I{} curl -o ../data/Security-{}.tgz "https://opensource.apple.com/tarballs/Security/Security-{}.tar.gz"'
       - name: save data
