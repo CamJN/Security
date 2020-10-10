@@ -24,7 +24,7 @@ jobs:
       - name: prep dir
         run: mkdir ../data
       - name: Scrape data
-        run: curl -sSL https://opensource.apple.com/source/Security/ | xmllint --html --xpath './/a[starts-with(@href,"Security")]/@href' - | tr ' ' "\n" | sed -Ee 's@href="Security-([^"]+)/"@\1@g' | sort -u | grep -vf <(git tag | sed -Ee 's/v(.*)/^\1$/g' ) | xargs -I{} curl -o ../data/Security-{}.tgz "https://opensource.apple.com/tarballs/Security/Security-{}.tar.gz"
+        run: 'curl -sSL https://opensource.apple.com/source/Security/ | xmllint --html --xpath \'.//a[starts-with(@href,"Security")]/@href\' - | tr " " "\n" | sed -Ee \'s@href="Security-([^"]+)/"@\1@g\' | sort -u | grep -vf <(git tag | sed -Ee \'s/v(.*)/^\1$/g\' ) | xargs -I{} curl -o ../data/Security-{}.tgz "https://opensource.apple.com/tarballs/Security/Security-{}.tar.gz"'
       - name: save data
         uses: actions/upload-artifact@v2
         with:
