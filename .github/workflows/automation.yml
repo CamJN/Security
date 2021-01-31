@@ -28,7 +28,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
       - name: Scrape data
-        run: 'curl -sSL https://opensource.apple.com/source/Security/ | xmllint --html --xpath ''.//a[starts-with(@href,"Security")]/@href'' - | tr " " "\n" | sed -Ee ''s@href="Security-([^"]+)/"@\1@g'' | sort -u | grep -vf <(git -C repo tag | sed -Ee ''s/v(.*)/^\1$/g'' ) | xargs -I{} curl -o ./data/Security-{}.tgz "https://opensource.apple.com/tarballs/Security/Security-{}.tar.gz"'
+        run: 'curl -sSL https://opensource.apple.com/source/Security/ | xmllint --html --xpath ''.//a[starts-with(@href,"Security")]/@href'' - | tr " " "\n" | sed -Ee ''s@href="Security-([^"]+)/?"@\1@g'' | sort -u | grep -vf <(git -C repo tag | sed -Ee ''s/v(.*)/^\1$/g'' ) | xargs -I{} curl -o ./data/Security-{}.tgz "https://opensource.apple.com/tarballs/Security/Security-{}.tar.gz"'
       - name: loop and upload
         run: |
           for f in $(ls data/Security-* | sort -V); do
